@@ -3,7 +3,7 @@ import os
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-from payload import water_meter
+from payload import soil_moisture
 from device import config, mqtt
 
 import paho.mqtt.client as mqttclient
@@ -21,13 +21,13 @@ def main():
     client.loop_start()
 
     battery = 99
-    pulse_counter = 130000
+    moisture = 57
 
     while True:
         battery += 1
-        pulse_counter += 157
+        moisture += 57
 
-        collect_data = water_meter.PayloadWaterMeter(battery, pulse_counter)
+        collect_data = soil_moisture.PayloadSoilMoistureSensor(battery, moisture)
 
         mqtt.send_message(client, collect_data.serialize())
         
