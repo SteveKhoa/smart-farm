@@ -1,0 +1,12 @@
+import sys
+import os
+
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
+
+
+BROKER_ADDRESS = os.getenv("COREIOT_BROKER_ADDRESS")
+BROKER_PORT = int(os.getenv("COREIOT_BROKER_PORT"))
+
+SOIL_MOISTURE_1_CLIENT_ID = os.getenv("SI_SOIL_MOISTURE_1_CLIENT_ID")
+SOIL_MOISTURE_1_ACCESS_USERNAME = os.getenv("SI_SOIL_MOISTURE_1_CLIENT_USERNAME")
+SOIL_MOISTURE_1_ACCESS_TOKEN = os.getenv("SI_SOIL_MOISTURE_1_CLIENT_PASSWORD")
