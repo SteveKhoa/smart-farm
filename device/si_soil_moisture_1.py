@@ -11,10 +11,8 @@ import time
 
 
 def main():
-    client = mqttclient.Client(config.CLIENT_ID)
-    print(config.ACCESS_USERNAME)
-    print(config.ACCESS_TOKEN)
-    client.username_pw_set(config.ACCESS_USERNAME, config.ACCESS_TOKEN)
+    client = mqttclient.Client(config.SOIL_MOISTURE_1_CLIENT_ID)
+    client.username_pw_set(config.SOIL_MOISTURE_1_ACCESS_USERNAME, config.SOIL_MOISTURE_1_ACCESS_TOKEN)
     client.on_connect = mqtt.connected
     client.on_subscribe = mqtt.subscribed
     client.on_message = mqtt.recv_message
