@@ -2,5 +2,10 @@
     "idf.portWin": "COM5",
     "idf.openOcdConfigs": [
         "board/esp32s3-bridge.cfg"
-    ]
+    ],
+    "files.associations": {
+      "*.embeddedhtml": "html",
+      "array": "cpp",
+      "cmath": "cpp"
+    }
 }

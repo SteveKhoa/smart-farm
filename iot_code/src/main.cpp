@@ -1,12 +1,142 @@
+
+#include <WiFi.h>
+#include <Arduino_MQTT_Client.h>
+#include <ThingsBoard.h>
+#include "Wire.h"
 #include <Arduino.h>
 #include <DHT20.h>
 #include <Adafruit_NeoPixel.h>
+#include <ArduinoOTA.h>
+
+constexpr char WIFI_SSID[] = "Tung";
+constexpr char WIFI_PASSWORD[] = "concutao";
+
+constexpr char TOKEN[] = "HI4W8GwHv8X1IFLLtTLr";
 
 uint32_t D3 = GPIO_NUM_6;
+uint32_t A1 = GPIO_NUM_2;
+
+constexpr uint32_t MAX_MESSAGE_SIZE = 1024U;
+constexpr uint32_t SERIAL_DEBUG_BAUD = 115200U;
+
+constexpr char THINGSBOARD_SERVER[] = "app.coreiot.io";
+constexpr uint16_t THINGSBOARD_PORT = 1883U;
+
+WiFiClient wifiClient;
+Arduino_MQTT_Client mqttClient(wifiClient);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
+
+// constexpr std::array<const char *, 2U> SHARED_ATTRIBUTES_LIST = {
+//   LED_STATE_ATTR,
+//   BLINKING_INTERVAL_ATTR
+// };
+
+DHT20 dht20;
+
+// const std::array<RPC_Callback, 1U> callbacks = {
+//   RPC_Callback{ "setLedSwitchValue", setLedSwitchState }
+// };
+
+// void processSharedAttributes(const Shared_Attribute_Data &data) {
+//   for (auto it = data.begin(); it != data.end(); ++it) {
+//     if (strcmp(it->key().c_str(), BLINKING_INTERVAL_ATTR) == 0) {
+//       const uint16_t new_interval = it->value().as<uint16_t>();
+//       if (new_interval >= BLINKING_INTERVAL_MS_MIN && new_interval <= BLINKING_INTERVAL_MS_MAX) {
+//         blinkingInterval = new_interval;
+//         Serial.print("Blinking interval is set to: ");
+//         Serial.println(new_interval);
+//       }
+//     } else if (strcmp(it->key().c_str(), LED_STATE_ATTR) == 0) {
+//       ledState = it->value().as<bool>();
+//       digitalWrite(LED_PIN, ledState);
+//       Serial.print("LED state is set to: ");
+//       Serial.println(ledState);
+//     }
+//   }
+//   attributesChanged = true;
+// }
+
+void InitWiFi() {
+  Serial.println("Connecting to AP ...");
+  // Attempting to establish a connection to the given WiFi network
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  while (WiFi.status() != WL_CONNECTED) {
+    // Delay 500ms until a connection has been successfully established
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("Connected to AP");
+}
+
+void taskWifiControl(void *pvParameters) {
+  delay(10);
+  Serial.println("taskWifiControl started");
+  wl_status_t status = WiFi.status();
+  while(1) {
+    status = WiFi.status();
+    if (status != WL_CONNECTED) {
+        InitWiFi();
+        Serial.print("Reconnecting...");
+    }
+    else{
+      Serial.print("Wifi is connected");
+    }
+    // Serial.print("Checking wifi...");
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
+}
+
+void taskCoreIoTConnect(void *pvParameters) {
+  while(1) {
+    if (WiFi.status() != WL_CONNECTED) {
+    }  
+    else if (!tb.connected()) {
+      Serial.print("Connecting to: ");
+      Serial.print(THINGSBOARD_SERVER);
+      Serial.print(" with token ");
+      Serial.println(TOKEN);
+      if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
+        Serial.println("Failed to connect");
+        return;
+      }
+      // if (!tb.connect(THINGSBOARD_SERVER, TOKEN2, THINGSBOARD_PORT)) {
+      //   Serial.println("Failed to connect");
+      //   return;
+      // }
+
+      tb.sendAttributeData("macAddress", WiFi.macAddress().c_str());
+
+      // no attribute and RPC currently
+
+      // Serial.println("Subscribing for RPC...");
+      // if (!tb.RPC_Subscribe(callbacks.cbegin(), callbacks.cend())) {
+      //   Serial.println("Failed to subscribe for RPC");
+      //   return;
+      // }
+
+      // if (!tb.Shared_Attributes_Subscribe(attributes_callback)) {
+      //   Serial.println("Failed to subscribe for shared attribute updates");
+      //   return;
+      // }
+
+      // Serial.println("Subscribe done");
+
+      // if (!tb.Shared_Attributes_Request(attribute_shared_request_callback)) {
+      //   Serial.println("Failed to request for shared attributes");
+      //   return;
+      // }
+    }
+
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
+  
+}
+
 
 Adafruit_NeoPixel rgb(4, D3, NEO_GRB + NEO_KHZ800);
 
 void TaskLEDControl(void *pvParameters) {
+
 
   pinMode(GPIO_NUM_48, OUTPUT); // Initialize LED pin
   int ledState = 0;
@@ -22,9 +152,20 @@ void TaskLEDControl(void *pvParameters) {
   }
 }
 
+void taskThingsBoard(void *pvParameters) {
+  while(1) {
+    if (WiFi.status() == WL_CONNECTED) {
+      tb.loop();
+    }
+
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
+
+}
+
 void TaskLightSensor(void *pvParameters){
     while(1){
-      uint16_t lightRaw = analogRead(GPIO_NUM_2);
+      uint16_t lightRaw = analogRead(A1);
       Serial.print("Light: "); Serial.print(lightRaw); 
       Serial.print(" % ");
       Serial.println();
@@ -35,27 +176,27 @@ void TaskLightSensor(void *pvParameters){
       }
       // push to coreiot
 
-      vTaskDelay(4000);
+      vTaskDelay(5000);
     }
   
   }
 
-void TaskLedControl(void *pvParameters){
+void TaskLedLightControl(void *pvParameters){
     while(1){
-        if ((analogRead(GPIO_NUM_2)/ 4096.0 < 30)) {
+        if ((analogRead(A1)/ 4096.0 < 0.3)) {
             rgb.fill(rgb.Color(255,255,255));
             rgb.show();
         } else {
             rgb.fill(rgb.Color(255,0,0));
             rgb.show();
         }
-      vTaskDelay(300);
+      vTaskDelay(2000);
     }
   
   }
 
 void TaskTemperature_Humidity(void *pvParameters){
-  DHT20 dht20;
+
   Wire.begin(GPIO_NUM_11, GPIO_NUM_12);
   dht20.begin();
   while(1){
@@ -64,9 +205,18 @@ void TaskTemperature_Humidity(void *pvParameters){
     double temperature = dht20.getTemperature();
     double humidity = dht20.getHumidity();
 
-    Serial.print("Temp: "); Serial.print(temperature); Serial.print(" *C ");
-    Serial.print(" Humidity: "); Serial.print(humidity); Serial.print(" %");
-    Serial.println();
+
+
+    if (isnan(temperature) || isnan(humidity)) {
+        Serial.println("Failed to read from DHT20 sensor!");
+      } else {
+        Serial.print("Temp: "); Serial.print(temperature); Serial.print(" *C ");
+        Serial.print(" Humidity: "); Serial.print(humidity); Serial.print(" %");
+        Serial.println();
+
+        tb.sendTelemetryData("temperature", temperature);
+        tb.sendTelemetryData("humidity", humidity);
+      }
     
     vTaskDelay(2000);
   }
@@ -76,11 +226,14 @@ void TaskTemperature_Humidity(void *pvParameters){
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(1152000);
+  Serial.begin(115200);
   xTaskCreate(TaskLEDControl, "LED Control", 2048, NULL, 2, NULL);
-  xTaskCreate(TaskLedControl, "Led light", 2048, NULL, 2, NULL);
-//   xTaskCreate(TaskTemperature_Humidity, "LED Control", 2048, NULL, 2, NULL);
+  // xTaskCreate(TaskLedLightControl, "Led light", 2048, NULL, 2, NULL);
+  xTaskCreate(TaskTemperature_Humidity, "LED Control", 2048, NULL, 2, NULL);
   xTaskCreate(TaskLightSensor, "Light Sensor", 2048, NULL, 2, NULL);
+  xTaskCreate(taskWifiControl, "Wifi Control", 4096, NULL, 2, NULL);
+  xTaskCreate(taskCoreIoTConnect, "Core IoT Connect", 4096, NULL, 2, NULL);
+  xTaskCreate(taskThingsBoard, "ThingsBoard", 4096, NULL, 2, NULL);
 }
 
 void loop() {
