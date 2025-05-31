@@ -18,6 +18,7 @@ def main():
         (mqttclient.Client(os.getenv("HUMIDITY_CLIENT_ID")), "humidity"),
         (mqttclient.Client(os.getenv("MOISTURE_CLIENT_ID")), "moisture"),
         (mqttclient.Client(os.getenv("LIGHT_CLIENT_ID")), "light"),
+        (mqttclient.Client(os.getenv("TEST_CLIENT_ID")), "test"),
     ]
 
     for conf in device_configs:
@@ -26,7 +27,12 @@ def main():
         device.on_connect = mqtt.connected
         device.on_subscribe = mqtt.subscribed
         device.on_message = mqtt.recv_message
-        device.connect(config.BROKER_ADDRESS, config.BROKER_PORT)
+
+        if data_key == "test":
+            device.connect("broker.hivemq.com", config.BROKER_PORT)
+        else:
+            device.connect(config.BROKER_ADDRESS, config.BROKER_PORT)
+
         device.loop_start()
 
         device.username_pw_set(
