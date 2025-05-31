@@ -2,11 +2,15 @@
 #include <WiFi.h>
 #include <Arduino_MQTT_Client.h>
 #include <ThingsBoard.h>
-#include "Wire.h"
-#include <Arduino.h>
 #include <DHT20.h>
-#include <Adafruit_NeoPixel.h>
+#include "Wire.h"
 #include <ArduinoOTA.h>
+#include <Arduino.h>
+#include <Adafruit_NeoPixel.h>
+#include <string>
+
+using namespace std;
+#define LED_PIN 48
 
 constexpr char WIFI_SSID[] = "Tung";
 constexpr char WIFI_PASSWORD[] = "concutao";
@@ -26,6 +30,10 @@ WiFiClient wifiClient;
 Arduino_MQTT_Client mqttClient(wifiClient);
 ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 
+volatile bool attributesChanged = false;
+volatile int ledMode = 0;
+volatile bool ledState = false;
+
 // constexpr std::array<const char *, 2U> SHARED_ATTRIBUTES_LIST = {
 //   LED_STATE_ATTR,
 //   BLINKING_INTERVAL_ATTR
@@ -33,9 +41,60 @@ ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 
 DHT20 dht20;
 
-// const std::array<RPC_Callback, 1U> callbacks = {
-//   RPC_Callback{ "setLedSwitchValue", setLedSwitchState }
-// };
+class MySensor {
+public:
+    const string token;  // Preferred for most use cases
+    const string name;
+    const string key;
+    WiFiClient wifiClient;
+    Arduino_MQTT_Client mqttClient;
+    const uint32_t MAX_MESSAGE_SIZE = 1024U;
+    const char THINGSBOARD_SERVER[256] = "app.coreiot.io";
+    const uint16_t THINGSBOARD_PORT = 1883U;
+    ThingsBoard tb;
+
+    MySensor(const string& token, string name) : token(token), name(name), mqttClient(wifiClient), tb(mqttClient, MAX_MESSAGE_SIZE) {
+    }
+
+    bool connect(){
+      // tb.connect(THINGSBOARD_SERVER, token, THINGSBOARD_PORT);
+      // Serial.println(token.c_str());
+      if (!tb.connect(THINGSBOARD_SERVER, token.c_str(), THINGSBOARD_PORT)) {
+          string error_mess =  "Failed to connect " + name;
+          Serial.println(error_mess.c_str());
+          return false;
+        }
+
+        tb.sendAttributeData("macAddress", WiFi.macAddress().c_str());
+
+        return true;
+    }
+    
+    template<typename T>
+    void sendTelementry(string key, T data){
+      tb.sendTelemetryData(key.c_str(), data);
+    }
+
+    
+};
+
+MySensor temperature_sensor("oj1lj5xj83IHVbNyUlmm", "temp_sen");
+MySensor humidity_sensor("9u79sgUI91RSW6l7xKTq", "hum_sen");
+
+RPC_Response setLedSwitchState(const RPC_Data &data) {
+    Serial.println("Received Switch state");
+    bool newState = data;
+    Serial.print("Switch state change: ");
+    Serial.println(newState);
+    digitalWrite(LED_PIN, newState);
+    attributesChanged = true;
+
+    return RPC_Response("setLedSwitchValue", newState); // RPC_Response(key: str, value)
+}
+
+const std::array<RPC_Callback, 1U> callbacks = {
+  RPC_Callback{ "setLedSwitchValue", setLedSwitchState }
+};
 
 // void processSharedAttributes(const Shared_Attribute_Data &data) {
 //   for (auto it = data.begin(); it != data.end(); ++it) {
@@ -93,18 +152,21 @@ void taskCoreIoTConnect(void *pvParameters) {
     else if (!tb.connected()) {
       Serial.print("Connecting to: ");
       Serial.print(THINGSBOARD_SERVER);
-      Serial.print(" with token ");
-      Serial.println(TOKEN);
-      if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
-        Serial.println("Failed to connect");
-        return;
-      }
+      // Serial.print(" with token ");
+      // Serial.println(TOKEN);
+
+      temperature_sensor.connect();
+      humidity_sensor.connect();
+      // if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
+      //   Serial.println("Failed to connect");
+      //   return;
+      // }
       // if (!tb.connect(THINGSBOARD_SERVER, TOKEN2, THINGSBOARD_PORT)) {
       //   Serial.println("Failed to connect");
       //   return;
       // }
 
-      tb.sendAttributeData("macAddress", WiFi.macAddress().c_str());
+      // tb.sendAttributeData("macAddress", WiFi.macAddress().c_str());
 
       // no attribute and RPC currently
 
@@ -148,7 +210,8 @@ void TaskLEDControl(void *pvParameters) {
       digitalWrite(GPIO_NUM_48, LOW); // Turn OFF LED
     }
     ledState = 1 - ledState;
-    vTaskDelay(2000);
+    vTaskDelay(1000);
+    // Serial.print("change led");
   }
 }
 
@@ -187,7 +250,7 @@ void TaskLedLightControl(void *pvParameters){
             rgb.fill(rgb.Color(255,255,255));
             rgb.show();
         } else {
-            rgb.fill(rgb.Color(255,0,0));
+            rgb.fill(rgb.Color(50,50,0));
             rgb.show();
         }
       vTaskDelay(2000);
@@ -206,7 +269,6 @@ void TaskTemperature_Humidity(void *pvParameters){
     double humidity = dht20.getHumidity();
 
 
-
     if (isnan(temperature) || isnan(humidity)) {
         Serial.println("Failed to read from DHT20 sensor!");
       } else {
@@ -214,8 +276,11 @@ void TaskTemperature_Humidity(void *pvParameters){
         Serial.print(" Humidity: "); Serial.print(humidity); Serial.print(" %");
         Serial.println();
 
-        tb.sendTelemetryData("temperature", temperature);
-        tb.sendTelemetryData("humidity", humidity);
+        temperature_sensor.sendTelementry("temperature", temperature);
+        humidity_sensor.sendTelementry("humidity", humidity);
+
+        // tb.sendTelemetryData("temperature", temperature);
+        // tb.sendTelemetryData("humidity", humidity);
       }
     
     vTaskDelay(2000);
@@ -227,8 +292,9 @@ void TaskTemperature_Humidity(void *pvParameters){
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  xTaskCreate(TaskLEDControl, "LED Control", 2048, NULL, 2, NULL);
-  // xTaskCreate(TaskLedLightControl, "Led light", 2048, NULL, 2, NULL);
+  // Serial.print(" hello ");
+  // xTaskCreate(TaskLEDControl, "LED Control", 2048, NULL, 2, NULL);
+  xTaskCreate(TaskLedLightControl, "Led light", 2048, NULL, 2, NULL);
   xTaskCreate(TaskTemperature_Humidity, "LED Control", 2048, NULL, 2, NULL);
   xTaskCreate(TaskLightSensor, "Light Sensor", 2048, NULL, 2, NULL);
   xTaskCreate(taskWifiControl, "Wifi Control", 4096, NULL, 2, NULL);
