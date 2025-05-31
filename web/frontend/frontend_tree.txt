@@ -1,0 +1,82 @@
+.
+├── README.md
+├── docs
+│   └── ui
+│       └── ui-wireframe-all.png
+├── frontend_tree.txt
+├── jsconfig.json
+├── package-lock.json
+├── package.json
+├── public
+│   ├── apple-icon.png
+│   ├── favicon.png
+│   ├── index.html
+│   ├── manifest.json
+│   └── robots.txt
+└── src
+    ├── App.js
+    ├── appRoutes.js
+    ├── components
+    │   ├── AppBreadcrumb
+    │   │   └── index.jsx
+    │   ├── PrivateRoute
+    │   │   └── PrivateRoute.js
+    │   └── SideNav
+    │       └── index.jsx
+    ├── features
+    │   └── userSlice.js
+    ├── index.js
+    ├── layouts
+    │   └── PageLayout
+    │       └── index.jsx
+    ├── pages
+    │   ├── AdminDashboard
+    │   │   ├── components
+    │   │   │   ├── UserDashboard.jsx
+    │   │   │   ├── UserList.jsx
+    │   │   │   └── UserSearch.jsx
+    │   │   └── index.jsx
+    │   ├── DataDashboard
+    │   │   ├── AdminDataDashboard
+    │   │   │   ├── components
+    │   │   │   │   ├── AnomalyTracker.jsx
+    │   │   │   │   ├── DataActions.jsx
+    │   │   │   │   ├── DevicesPieSurface.jsx
+    │   │   │   │   ├── KPI.jsx
+    │   │   │   │   ├── List
+    │   │   │   │   │   └── index.jsx
+    │   │   │   │   └── TrendAnalysis.jsx
+    │   │   │   └── index.jsx
+    │   │   └── index.jsx
+    │   ├── Devices
+    │   │   └── index.jsx
+    │   ├── IotDashboard
+    │   │   ├── AdminIoTDashboard
+    │   │   │   ├── components
+    │   │   │   │   ├── DeviceDetailModal.jsx
+    │   │   │   │   ├── DeviceList.jsx
+    │   │   │   │   └── DeviceSurface.jsx
+    │   │   │   ├── contexts
+    │   │   │   │   └── DeviceSettings.jsx
+    │   │   │   └── index.jsx
+    │   │   ├── StudentIoTDashboard
+    │   │   │   ├── components
+    │   │   │   │   ├── DeviceList.jsx
+    │   │   │   │   ├── DeviceSurface.jsx
+    │   │   │   │   ├── Feedback.jsx
+    │   │   │   │   └── GeneralPanel.jsx
+    │   │   │   └── index.jsx
+    │   │   └── index.jsx
+    │   └── Login
+    │       ├── components
+    │       │   ├── signInForm.jsx
+    │       │   ├── signUpForm.jsx
+    │       │   └── title.jsx
+    │       └── index.jsx
+    ├── store
+    │   └── store.js
+    └── utils
+        ├── exportCSV.js
+        └── exportJSON.js
+
+30 directories, 50 files

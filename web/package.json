@@ -1,0 +1,19 @@
+{
+  "dependencies": {
+    "axios": "^1.6.8",
+    "chartjs": "^0.3.24",
+    "chartjs-plugin-datalabels": "^2.2.0",
+    "chartjs-plugin-labels": "^1.1.0",
+    "geoip-lite": "^1.4.10",
+    "useragent": "^2.3.0"
+  },
+  "name": "multidisciplinary_project_232",
+  "description": "**Start date**:   **Author**:",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
