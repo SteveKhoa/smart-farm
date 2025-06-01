@@ -31,8 +31,10 @@ Arduino_MQTT_Client mqttClient(wifiClient);
 ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 
 volatile bool attributesChanged = false;
-volatile int ledMode = 0;
 volatile bool ledState = false;
+volatile uint16_t lightPercent = 50;
+
+constexpr char LEDLIGHT_ATTR[] = "ledLight";
 
 // constexpr std::array<const char *, 2U> SHARED_ATTRIBUTES_LIST = {
 //   LED_STATE_ATTR,
@@ -75,45 +77,55 @@ public:
       tb.sendTelemetryData(key.c_str(), data);
     }
 
-    
+
 };
 
 MySensor temperature_sensor("oj1lj5xj83IHVbNyUlmm", "temp_sen");
 MySensor humidity_sensor("9u79sgUI91RSW6l7xKTq", "hum_sen");
 
-RPC_Response setLedSwitchState(const RPC_Data &data) {
-    Serial.println("Received Switch state");
-    bool newState = data;
+// RPC_Response setLedSwitchState(const RPC_Data &data) {
+//     Serial.println("Received Switch state");
+//     bool newState = data;
+//     Serial.print("Switch state change: ");
+//     Serial.println(newState);
+//     digitalWrite(LED_PIN, newState);
+//     attributesChanged = true;
+
+//     return RPC_Response("setLedSwitchValue", newState); // RPC_Response(key: str, value)
+// }
+
+RPC_Response setLedLight(const RPC_Data &data) {
+    // neu ddc thif sd rule chain tuwf core iot ddeer mowr ddeefn 
+    Serial.println("Received led light");
+    // bool data_parse = data;
+    uint16_t light_percent = data;
     Serial.print("Switch state change: ");
-    Serial.println(newState);
-    digitalWrite(LED_PIN, newState);
+    // Serial.println(newState);
     attributesChanged = true;
 
-    return RPC_Response("setLedSwitchValue", newState); // RPC_Response(key: str, value)
+    return RPC_Response("setLedLightValue", light_percent); // RPC_Response(key: str, value)
 }
 
 const std::array<RPC_Callback, 1U> callbacks = {
-  RPC_Callback{ "setLedSwitchValue", setLedSwitchState }
+  RPC_Callback{ "setLedLight", setLedLight }
 };
 
-// void processSharedAttributes(const Shared_Attribute_Data &data) {
-//   for (auto it = data.begin(); it != data.end(); ++it) {
-//     if (strcmp(it->key().c_str(), BLINKING_INTERVAL_ATTR) == 0) {
-//       const uint16_t new_interval = it->value().as<uint16_t>();
-//       if (new_interval >= BLINKING_INTERVAL_MS_MIN && new_interval <= BLINKING_INTERVAL_MS_MAX) {
-//         blinkingInterval = new_interval;
-//         Serial.print("Blinking interval is set to: ");
-//         Serial.println(new_interval);
-//       }
-//     } else if (strcmp(it->key().c_str(), LED_STATE_ATTR) == 0) {
-//       ledState = it->value().as<bool>();
-//       digitalWrite(LED_PIN, ledState);
-//       Serial.print("LED state is set to: ");
-//       Serial.println(ledState);
-//     }
-//   }
-//   attributesChanged = true;
-// }
+void processSharedAttributes(const Shared_Attribute_Data &data) {
+  for (auto it = data.begin(); it != data.end(); ++it) {
+    if (strcmp(it->key().c_str(), LEDLIGHT_ATTR) == 0) {
+      //process LEDLIGHT_ATTR
+      // neu ddc thif sd rule chain tuwf core iot ddeer mowr ddeefn 
+      const uint16_t newLightPercent = it->value().as<uint16_t>();
+      if (newLightPercent >= 0 && newLightPercent <= 100) {
+        lightPercent = newLightPercent;
+        Serial.print("Blinking interval is set to: ");
+        Serial.println(newLightPercent);
+      }
+
+    } 
+  }
+  attributesChanged = true;
+}
 
 void InitWiFi() {
   Serial.println("Connecting to AP ...");
@@ -233,8 +245,11 @@ void TaskLightSensor(void *pvParameters){
       Serial.print(" % ");
       Serial.println();
       if (lightRaw < 30) {
+        // khong thif code thnawgf treen ddaay lum
+        ledState = true;
         // send turn light on
       } else {
+        ledState = false;
         // send turn light off
       }
       // push to coreiot
@@ -246,11 +261,13 @@ void TaskLightSensor(void *pvParameters){
 
 void TaskLedLightControl(void *pvParameters){
     while(1){
-        if ((analogRead(A1)/ 4096.0 < 0.3)) {
-            rgb.fill(rgb.Color(255,255,255));
+        // can change the intensity of the light to be more bright
+        float rgb_num = lightPercent / 100.0 * 255.0;
+        if (ledState) {
+            rgb.fill(rgb.Color(rgb_num,rgb_num,rgb_num));
             rgb.show();
         } else {
-            rgb.fill(rgb.Color(50,50,0));
+            rgb.fill(rgb.Color(0,0,0));
             rgb.show();
         }
       vTaskDelay(2000);
