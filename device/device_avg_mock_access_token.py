@@ -56,6 +56,7 @@ def main():
                 "v1/devices/me/telemetry",
                 json.dumps(
                     {
+                        "value": value,
                         "valueAvgPerWeek": fake_avg,
                     }
                 ),
