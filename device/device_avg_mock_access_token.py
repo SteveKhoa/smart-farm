@@ -5,8 +5,8 @@ import json
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-from payload import soil_moisture
 from device import config, mqtt
+from pkg import get_avg
 
 import paho.mqtt.client as mqttclient
 import time
@@ -49,11 +49,14 @@ def main():
 
         for conf in device_configs:
             client, _, _ = conf
+
+            fake_avg = get_avg(config.WORKING_DIRECTORY, value, device.data_key)
+
             client.publish(
                 "v1/devices/me/telemetry",
                 json.dumps(
                     {
-                        "value": value,
+                        "valueAvgPerWeek": fake_avg,
                     }
                 ),
                 1,
