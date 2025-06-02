@@ -54,6 +54,8 @@ def main():
                 json.dumps(
                     {
                         "value": value,
+                        "criticalAlarmsCount": 0,
+                        "majorAlarmsCount": 0,
                     }
                 ),
                 1,
