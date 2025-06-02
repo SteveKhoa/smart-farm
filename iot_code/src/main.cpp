@@ -195,30 +195,6 @@ void taskCoreIoTConnect(void *pvParameters)
 {
   MySensor *sensor = (MySensor *)pvParameters;
 
-  // while(1) {
-  //   if (WiFi.status() != WL_CONNECTED) {
-  //   }  
-  //   else if (!tb.connected()) {
-  //     Serial.print("Connecting to: ");
-  //     Serial.print(THINGSBOARD_SERVER);
-  //     Serial.print(" with token ");
-  //     Serial.println(TOKEN);
-  //     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
-  //       Serial.println("Failed to connect");
-  //       return;
-  //     }
-
-  //     tb.sendAttributeData("macAddress", WiFi.macAddress().c_str());
-
-  //     Serial.println("Subscribing for RPC...");
-  //     if (!tb.RPC_Subscribe(callbacks.cbegin(), callbacks.cend())) {
-  //       Serial.println("Failed to subscribe for RPC");
-  //       return;
-  //     }
-  //   }
-
-  //   vTaskDelay(1000 / portTICK_PERIOD_MS);
-
 
   while (1)
   {
@@ -339,13 +315,6 @@ void TaskLedLightControl(void *pvParameters)
     Serial.print(lightPercent);
     Serial.print("% -> RGB Value: ");
     Serial.println(rgb_num);
-    // if (ledState) {
-    //     rgb.fill(rgb.Color(rgb_num,rgb_num,rgb_num));
-    //     rgb.show();
-    // } else {
-    //     rgb.fill(rgb.Color(0,0,0));
-    //     rgb.show();
-    // }
     rgb.fill(rgb.Color(rgb_num, rgb_num, rgb_num));
     rgb.show();
     vTaskDelay(2000);
