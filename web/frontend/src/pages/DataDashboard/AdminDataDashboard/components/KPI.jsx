@@ -172,8 +172,8 @@ const CostKPI = () => {
                     color={deltaCost > 0 ? "danger" : "success"}
                     textAlign="center"
                 >
-                    {deltaCost > 0 ? "+" : "-"}
-                    {(deltaCost * 100).toFixed(2)}%{" "}
+                    {Number.isNaN(deltaCost) ? "+" : (deltaCost > 0 ? "+" : "-")}
+                    {Number.isNaN(deltaCost) ? "0.00" : (deltaCost * 100).toFixed(2)}%{" "}
                     <Typography level="body-sm" color="neutral">
                         since last week
                     </Typography>
@@ -362,10 +362,22 @@ const DevicesStatusKPI = () => {
 
             return deltaDate;
         };
+
         let allIssues = await getIssues();
+
+        console.log(allIssues)
+
         allIssues = allIssues.map((issue) => {
-            issue.elapsed = getElapsedDays(issue.date);
-            return issue;
+            return ({
+                id: issue.id.id,
+                elapsed: getElapsedDays(new Date(issue.startTs)),
+                severity: issue.severity,
+                device: issue.originatorLabel,
+                date: new Date(issue.startTs),
+                location: "B9-LY THUONG KIET",
+                feedback: "-",
+                complete: issue.cleared,
+            });
         });
         setIssues(allIssues);
         setNumberOfIssues(allIssues.length);
@@ -392,7 +404,7 @@ const DevicesStatusKPI = () => {
         const IssueList = () => {
             return (
                 <TableContainer sx={{ maxHeight: "40vh" }}>
-                    <Table stickyHeader borderAxis="x" size="sm">
+                    <Table stickyHeader size="sm">
                         <colgroup>
                             <col width="1%" />
                             <col width="1%" />
@@ -415,7 +427,7 @@ const DevicesStatusKPI = () => {
                         </TableHead>
                         <TableBody>
                             {allIssues.map((issue, idx) => (
-                                <TableRow>
+                                <TableRow key={idx}>
                                     <TableCell>{idx + 1}</TableCell>
                                     <TableCell>
                                         <Chip color="danger" size="sm">
@@ -467,7 +479,7 @@ const DevicesStatusKPI = () => {
                             alignItems="center"
                         >
                             <Typography level="title-lg">
-                                Unhandled Issues
+                                Recorded Issues
                             </Typography>
                             <Button
                                 variant="plain"
@@ -512,7 +524,7 @@ const DevicesStatusKPI = () => {
                         </IconButton>
                     }
                 >
-                    Unhandled Issues
+                    Recorded Issues
                 </Typography>
                 <Typography level="h1" textAlign="center">
                     {numberOfIssues}

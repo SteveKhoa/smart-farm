@@ -4,9 +4,9 @@ export const userSlice = createSlice({
   name: 'user',
   initialState: {
     _id: "",
-    email: "",
-    fullname: "",
-    role: "",
+    email: "khoa.lesteve@hcmut.edu.vn",
+    fullname: "Nguyen Khoa",
+    role: "Admin",
     positionList: [],
     __v: 0,
   },
