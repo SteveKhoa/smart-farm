@@ -184,49 +184,49 @@ void taskWifiControl(void *pvParameters) {
 void taskCoreIoTConnect(void *pvParameters) {
   MySensor* sensor = (MySensor*)pvParameters;
 
-  // while(1) {
-  //   if (WiFi.status() != WL_CONNECTED) {
-  //   }  
-  //   else if (!tb.connected()) {
-  //     Serial.print("Connecting to: ");
-  //     Serial.print(THINGSBOARD_SERVER);
-  //     // Serial.print(" with token ");
-  //     // Serial.println(TOKEN);
+  while(1) {
+    if (WiFi.status() != WL_CONNECTED) {
+    }  
+    else if (!tb.connected()) {
+      Serial.print("Connecting to: ");
+      Serial.print(THINGSBOARD_SERVER);
+      // Serial.print(" with token ");
+      // Serial.println(TOKEN);
 
-  //     temperature_sensor.connect();
-  //     humidity_sensor.connect();
-  //     light_sensor.connect();
-  //     // if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
-  //     //   Serial.println("Failed to connect");
-  //     //   return;
-  //     // }
-  //     // if (!tb.connect(THINGSBOARD_SERVER, TOKEN2, THINGSBOARD_PORT)) {
-  //     //   Serial.println("Failed to connect");
-  //     //   return;
-  //     // }
+      temperature_sensor.connect();
+      humidity_sensor.connect();
+      light_sensor.connect();
+      // if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
+      //   Serial.println("Failed to connect");
+      //   return;
+      // }
+      // if (!tb.connect(THINGSBOARD_SERVER, TOKEN2, THINGSBOARD_PORT)) {
+      //   Serial.println("Failed to connect");
+      //   return;
+      // }
 
-  //     // tb.sendAttributeData("macAddress", WiFi.macAddress().c_str());
+      // tb.sendAttributeData("macAddress", WiFi.macAddress().c_str());
 
-  //     // no attribute and RPC currently
+      // no attribute and RPC currently
 
-  //     // Serial.println("Subscribing for RPC...");
-  //     // if (!tb.RPC_Subscribe(callbacks.cbegin(), callbacks.cend())) {
-  //     //   Serial.println("Failed to subscribe for RPC");
-  //     //   return;
-  //     // }
+      Serial.println("Subscribing for RPC...");
+      if (!tb.RPC_Subscribe(callbacks.cbegin(), callbacks.cend())) {
+        Serial.println("Failed to subscribe for RPC");
+        return;
+      }
 
-  //     // if (!tb.Shared_Attributes_Subscribe(attributes_callback)) {
-  //     //   Serial.println("Failed to subscribe for shared attribute updates");
-  //     //   return;
-  //     // }
+      // if (!tb.Shared_Attributes_Subscribe(attributes_callback)) {
+      //   Serial.println("Failed to subscribe for shared attribute updates");
+      //   return;
+      // }
 
-  //     // Serial.println("Subscribe done");
+      Serial.println("Subscribe done");
 
-  //     // if (!tb.Shared_Attributes_Request(attribute_shared_request_callback)) {
-  //     //   Serial.println("Failed to request for shared attributes");
-  //     //   return;
-  //     // }
-    // }
+      // if (!tb.Shared_Attributes_Request(attribute_shared_request_callback)) {
+      //   Serial.println("Failed to request for shared attributes");
+      //   return;
+      // }
+    }
 
     while(1) {
     if (WiFi.status() != WL_CONNECTED) {

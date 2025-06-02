@@ -1,0 +1,24 @@
+.
+├── backend_tree.txt
+├── controllers
+│   ├── auth.controller.js
+│   ├── device.controller.js
+│   ├── login.controller.js
+│   └── user.controller.js
+├── index.js
+├── middleware
+│   ├── auth.middleware.js
+│   └── verifyToken.middleware.js
+├── models
+│   ├── device.model.js
+│   ├── login.model.js
+│   └── user.model.js
+├── package-lock.json
+├── package.json
+└── routes
+    ├── auth.route.js
+    ├── device.route.js
+    ├── stat.route.js
+    └── user.route.js
+
+5 directories, 17 files

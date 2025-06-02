@@ -21,7 +21,7 @@ const getDevicesConsumption = async () => {
 
     // Just keep fan and led2
     const devices = response.data.device
-        .filter((x) => x.deviceID == "fan" || x.deviceID == "led2")
+        .filter((x) => x.deviceID == "fan")
         .map((dict) => {
             const retval = {
                 id: dict.deviceID,
@@ -33,24 +33,26 @@ const getDevicesConsumption = async () => {
 
     const getDeviceDateValue = async (deviceID) => {
         const response = await fetch(
-            `https://io.adafruit.com/api/v2/${ADAFRUIT_IO_USERNAME}/feeds/${deviceID}/data/chart?start_time=2024-01-01&resolution=60&field=avg`,
+            `https://app.coreiot.io/api/plugins/telemetry/DEVICE/1bbc3690-3864-11f0-aae0-0f85903b3644/values/timeseries?keys=value&startTs=${Date.now() - 604800000}&endTs=${Date.now()}`,
             {
                 headers: {
-                    "X-AIO-Key": ADAFRUIT_IO_KEY,
+                    "X-Authorization": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJsZXZpZXR0dW5nbHRAZ21haWwuY29tIiwidXNlcklkIjoiZGI4MDM3NjAtMjljMy0xMWYwLWEzYzktYWIwZDg5OTlmNTYxIiwic2NvcGVzIjpbIlRFTkFOVF9BRE1JTiJdLCJzZXNzaW9uSWQiOiIxNzMxZWM2YS0wNGEyLTRmMGMtYjE1Ny03NGQwOWQ5NzBjNTUiLCJleHAiOjE3NDg4NTIyNjksImlzcyI6ImNvcmVpb3QuaW8iLCJpYXQiOjE3NDg4NDMyNjksImZpcnN0TmFtZSI6InTDuW5nIiwibGFzdE5hbWUiOiJsw6oiLCJlbmFibGVkIjp0cnVlLCJpc1B1YmxpYyI6ZmFsc2UsInRlbmFudElkIjoiZGI2ZTM2MDAtMjljMy0xMWYwLWEzYzktYWIwZDg5OTlmNTYxIiwiY3VzdG9tZXJJZCI6IjEzODE0MDAwLTFkZDItMTFiMi04MDgwLTgwODA4MDgwODA4MCJ9._uTo6jmqMPeUxfr5xGsljUnrJ9tm9c9HcLVcY0xz-VbdmkJy5ZwF51ZechGrKh4cebVX1a6h-63m3ukyObXRBw",
                 },
             }
         );
 
         const parsedResponse = await response.json();
-        const date_value_pairs = parsedResponse.data;
+        const date_value_pairs = parsedResponse.value;
 
-        date_value_pairs.map((x) => {
-            x[0] = new Date(x[0]);
-            x[0] = getWeekNumber(x[0])[1];
-            return x;
+        const result = date_value_pairs.map((x) => {
+            x.ts = new Date(x.ts);
+            x.ts = getWeekNumber(x.ts)[1];
+
+            x.value = Number(x.value)
+            return ([x.ts, x.value]);
         });
 
-        return { id: deviceID, data: date_value_pairs };
+        return { id: deviceID, data: result };
     };
 
     const a = await Promise.all(
@@ -123,6 +125,11 @@ const getConsumptionKPI = async () => {
             (lastWeekConsumption - lastOfLastWeekConsumption) /
                 (lastWeekConsumption + lastOfLastWeekConsumption);
     }
+
+    console.log("thisWeekConsumption=", thisWeekConsumption)
+    console.log("deltaLastWeekConsumption=", deltaLastWeekConsumption)
+    console.log("lastWeekConsumption=", lastWeekConsumption)
+    console.log("lastOfLastWeekConsumption=", lastOfLastWeekConsumption)
 
     return [
         thisWeekConsumption / 1000,

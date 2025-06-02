@@ -21,8 +21,8 @@ import "chart.js/auto";
 import { useEffect, useState } from "react";
 
 const EnergyConsumptionPerDevice = () => {
-    const [fromDate, setFromDate] = useState("2024-01-01");
-    const [toDate, setToDate] = useState("2025-01-01");
+    const [fromDate, setFromDate] = useState("2024-05-31");
+    const [toDate, setToDate] = useState("2025-06-03");
     const [graphData, setGraphData] = useState({ datasets: [] });
 
     const [increasedDevices, setIncreasedDevices] = useState([]);
@@ -30,25 +30,23 @@ const EnergyConsumptionPerDevice = () => {
     const [peakDevice, setPeakDevice] = useState({});
 
     const loadsFigures = async () => {
-
         const response = await axios.get("http://localhost:3000/api/device/");
         // Just keep fan and led2
-        const devices = response.data.device.filter(
-            (x) => x.deviceID == "fan" || x.deviceID == "led2"
-        );
+        const devices = response.data.device.filter((x) => x.deviceID == "fan");
 
         const datas = await Promise.all(
             devices.map(async (device) => {
                 const response = await fetch(
-                    `https://io.adafruit.com/api/v2/${ADAFRUIT_IO_USERNAME}/feeds/${device.deviceID}/data/chart?start_time=${fromDate}&end_time=${toDate}&resolution=60&field=avg`,
+                    `https://app.coreiot.io/api/plugins/telemetry/DEVICE/1bbc3690-3864-11f0-aae0-0f85903b3644/values/timeseries?keys=value&startTs=${
+                        (new Date(fromDate)).getTime()
+                    }&endTs=${(new Date(toDate)).getTime()}`,
                     {
                         headers: {
-                            "X-AIO-Key": ADAFRUIT_IO_KEY,
+                            "X-Authorization":
+                                "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJsZXZpZXR0dW5nbHRAZ21haWwuY29tIiwidXNlcklkIjoiZGI4MDM3NjAtMjljMy0xMWYwLWEzYzktYWIwZDg5OTlmNTYxIiwic2NvcGVzIjpbIlRFTkFOVF9BRE1JTiJdLCJzZXNzaW9uSWQiOiIxNzMxZWM2YS0wNGEyLTRmMGMtYjE1Ny03NGQwOWQ5NzBjNTUiLCJleHAiOjE3NDg4NTIyNjksImlzcyI6ImNvcmVpb3QuaW8iLCJpYXQiOjE3NDg4NDMyNjksImZpcnN0TmFtZSI6InTDuW5nIiwibGFzdE5hbWUiOiJsw6oiLCJlbmFibGVkIjp0cnVlLCJpc1B1YmxpYyI6ZmFsc2UsInRlbmFudElkIjoiZGI2ZTM2MDAtMjljMy0xMWYwLWEzYzktYWIwZDg5OTlmNTYxIiwiY3VzdG9tZXJJZCI6IjEzODE0MDAwLTFkZDItMTFiMi04MDgwLTgwODA4MDgwODA4MCJ9._uTo6jmqMPeUxfr5xGsljUnrJ9tm9c9HcLVcY0xz-VbdmkJy5ZwF51ZechGrKh4cebVX1a6h-63m3ukyObXRBw",
                         },
                     }
                 );
-
-                console.log(response);
 
                 const json_response = await response.json();
 
@@ -58,10 +56,10 @@ const EnergyConsumptionPerDevice = () => {
                     borderWidth: 5,
                 };
 
-                const dates_values = json_response.data.map(
+                const dates_values = json_response.value.map(
                     (date_value_pair) => {
-                        const date = new Date(date_value_pair[0]);
-                        const value = date_value_pair[1];
+                        const date = new Date(date_value_pair.ts);
+                        const value = date_value_pair.value;
 
                         data.data.push({
                             x: date.toLocaleDateString(),
@@ -170,6 +168,7 @@ const EnergyConsumptionPerDevice = () => {
                                         increasedDevices.map(
                                             (increase, idx) => (
                                                 <Typography
+                                                    key={idx}
                                                     variant="soft"
                                                     color="danger"
                                                 >
